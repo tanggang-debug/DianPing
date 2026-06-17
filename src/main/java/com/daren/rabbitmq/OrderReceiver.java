@@ -1,4 +1,4 @@
-//package com.hmdp.rabbitmq;
+//package com.daren.rabbitmq;
 //
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;

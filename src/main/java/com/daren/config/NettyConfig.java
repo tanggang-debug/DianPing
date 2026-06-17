@@ -1,4 +1,4 @@
-//package com.hmdp.config;
+//package com.daren.config;
 //
 //import io.lettuce.core.resource.ClientResources;
 //import io.lettuce.core.resource.DefaultClientResources;

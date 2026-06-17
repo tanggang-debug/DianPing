@@ -11,10 +11,10 @@ spring:
     ansi:
       enabled: always
   application:
-    name: hmdp
+    name: daren
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/hmdp?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://127.0.0.1:3306/daren?useSSL=false&serverTimezone=UTC
     username: root
     password: 18502249082WWW
   redis:
@@ -57,12 +57,12 @@ spring:
 #          multiplier: 2.0         # 间隔时间的倍数（下一次重试为 2s, 然后 4s...）
 #          max-interval: 10000ms   # 最大重试间隔时间
 mybatis-plus:
-  type-aliases-package: com.hmdp.entity # 别名扫描包
+  type-aliases-package: com.daren.entity # 别名扫描包
 logging:
   level:
     org.springframework.data.redis: INFO
     io.lettuce.core: INFO
-    com.hmdp: INFO
+    com.daren: INFO
     org:
       springframework:
         beans:

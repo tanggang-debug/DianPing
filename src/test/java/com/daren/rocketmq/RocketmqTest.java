@@ -1,5 +1,5 @@
 /*
-package com.hmdp.rocketmq;
+package com.daren.rocketmq;
 
 import org.apache.rocketmq.client.producer.MessageQueueSelector;
 import org.apache.rocketmq.client.producer.SendCallback;

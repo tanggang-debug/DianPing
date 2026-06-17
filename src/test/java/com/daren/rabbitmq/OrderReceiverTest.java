@@ -1,7 +1,7 @@
-//package com.hmdp.rabbitmq;
+//package com.daren.rabbitmq;
 //
 //import cn.hutool.core.map.MapBuilder;
-//import com.hmdp.HmDianPingApplication;
+//import com.daren.HmDianPingApplication;
 //import org.junit.jupiter.api.Test;
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;

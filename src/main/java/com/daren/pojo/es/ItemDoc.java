@@ -1,5 +1,5 @@
 /*
-package com.hmdp.pojo.es;
+package com.daren.pojo.es;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;

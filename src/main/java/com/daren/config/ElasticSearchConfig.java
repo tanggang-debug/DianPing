@@ -1,5 +1,5 @@
 /*
-package com.hmdp.config;
+package com.daren.config;
 
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.context.annotation.Bean;

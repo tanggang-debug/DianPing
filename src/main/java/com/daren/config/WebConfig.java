@@ -1,7 +1,7 @@
-//package com.hmdp.config;
+//package com.daren.config;
 //
-//import com.hmdp.Interceptor.LoginInterceptor;
-//import com.hmdp.Interceptor.RefreshTokenInterceptor;
+//import com.daren.Interceptor.LoginInterceptor;
+//import com.daren.Interceptor.RefreshTokenInterceptor;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.context.annotation.Configuration;
 //import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
