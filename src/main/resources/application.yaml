@@ -1,0 +1,84 @@
+server:
+  port: 8081
+  tomcat:
+    accept-count: 1000 # 队列长度
+    max-connections: 1000  # 最大连接数
+    threads:
+      max: 500
+      min-spare: 50
+spring:
+  output:
+    ansi:
+      enabled: always
+  application:
+    name: hmdp
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/hmdp?useSSL=false&serverTimezone=UTC
+    username: root
+    password: 18502249082WWW
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    client-type: lettuce
+    lettuce:
+      pool:
+        enabled: true
+        max-wait: -1ms
+        max-active: 32
+    password: 123456
+    database: 0
+    timeout: 5000ms
+  jackson:
+    default-property-inclusion: non_null # JSON处理时忽略非空字段
+  elasticsearch:
+    # ES 服务的地址，如果是 Docker 部署且在同一宿主机，用 localhost
+    # 如果是 Docker 容器间通信，用容器名
+    uris: http://localhost:9200
+    # 如果设置了安全加密，需要配置用户名和密码
+#    username: elastic
+#    password:
+#    connection-timeout: 3s
+#    socket-timeout: 10s
+#  rabbitmq:
+#    host: localhost
+#    port: 5672
+#    username: hmall
+#    password: 123456
+#    virtual-host: / # 我们之前讨论过的数据隔离
+#    publisher-confirm-type: none
+#    listener:
+#      simple:
+#        acknowledge-mode: auto
+#        retry:
+#          enabled: true           # 开启消费者本地重试
+#          max-attempts: 3         # 最大重试次数（包括第一次投递）
+#          initial-interval: 1000ms # 第一次重试的间隔时间
+#          multiplier: 2.0         # 间隔时间的倍数（下一次重试为 2s, 然后 4s...）
+#          max-interval: 10000ms   # 最大重试间隔时间
+mybatis-plus:
+  type-aliases-package: com.hmdp.entity # 别名扫描包
+logging:
+  level:
+    org.springframework.data.redis: INFO
+    io.lettuce.core: INFO
+    com.hmdp: INFO
+    org:
+      springframework:
+        beans:
+          factory:
+            support: DEBUG
+#rocketmq:
+#  # NameServer 地址，多个用逗号隔开
+#  name-server: localhost:9876   # ⚠️ 必须填你启动的NameServer地址
+#  producer:
+#    group: orderCreate-producer-group      # ⚠️ 必填
+#  consumer:
+#    group: orderCreate-consumer-group      # ⚠️ 必填
+# 暴露出 startup 端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+# 让 Spring 打印创建 Bean 的详细日志
