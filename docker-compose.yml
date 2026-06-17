@@ -1,0 +1,171 @@
+version: '3.8'
+
+services:
+  # --- Redis 服务 ---
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    # 删掉 network_mode: host，改用 ports
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis/data:/data
+      - ./redis.conf:/etc/redis/redis.conf
+    #    command: redis-server /etc/redis/redis.conf --appendonly yes --appendfsync everysec
+    command: redis-server --appendonly yes --appendfsync everysec --requirepass 123456
+    privileged: true
+    restart: always
+
+  # --- Elasticsearch 服务 ---
+  #  elasticsearch:
+  #    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+  #    container_name: elasticsearch
+  #    # 关键修改：去掉 host 模式，显式映射端口
+  #    ports:
+  #      - "9200:9200"
+  #      - "9300:9300"
+  #    environment:
+  #      - node.name=elasticsearch
+  #      - discovery.type=single-node
+  #      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  #      - xpack.security.enabled=false
+  #      # 显式指定监听 IPv4 地址
+  #      - network.host=0.0.0.0
+  #      - http.host=0.0.0.0
+  #      # --- 关键：添加下面这一行 ---
+  #      - ELASTIC_CLIENT_APIVERSIONING=true
+  #    volumes:
+  #      - ./data/es/data:/usr/share/elasticsearch/data
+  #      - ./data/es/plugins:/usr/share/elasticsearch/plugins
+  #    ulimits:
+  #      memlock:
+  #        soft: -1
+  #        hard: -1
+  #    restart: always
+  #
+  #  # --- Kibana 服务 ---
+  #  kibana:
+  #    image: docker.elastic.co/kibana/kibana:8.12.0
+  #    container_name: kibana
+  #    ports:
+  #      - "5601:5601"
+  #    environment:
+  #      # 在同一个 Bridge 网络下，直接通过容器名访问
+  #      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+  #      - I18N_LOCALE=zh-CN
+  #    depends_on:
+  #      - elasticsearch
+  #    restart: always
+  # --- RocketMQ 服务 ---
+  namesrv:
+    image: apache/rocketmq:4.9.6
+    container_name: rmqnamesrv
+    network_mode: host
+    environment:
+      - JAVA_OPT=-Djava.net.preferIPv4Stack=true
+    volumes:
+      - ./data/namesrv/logs:/home/rocketmq/logs
+    command: sh mqnamesrv
+
+  broker:
+    image: apache/rocketmq:4.9.6
+    container_name: rmqbroker
+    network_mode: host
+    environment:
+      - NAMESRV_ADDR=127.0.0.1:9876
+      # 重点：这里定义我们要用的内存参数
+      - JAVA_OPT=-server -Xms1g -Xmx1g -Xmn512m -Djava.net.preferIPv4Stack=true
+      # 尝试强制指定最大堆内存
+      - MAX_POSSIBLE_HEAP=1073741824
+    depends_on:
+      - namesrv
+    # 重点：修改 command，先 export 环境变量再启动，或者直接在启动前打印
+    command: sh -c "export JAVA_OPT=\"$${JAVA_OPT}\" && sh mqbroker -c /opt/rocketmq/conf/broker.conf"
+    volumes:
+      - ./broker.conf:/opt/rocketmq/conf/broker.conf
+      - ./data/broker/logs:/home/rocketmq/logs
+      - ./data/broker/store:/home/rocketmq/store
+    user: root
+  dashboard:
+    image: apacherocketmq/rocketmq-dashboard:1.0.0
+    container_name: rmqdashboard
+    network_mode: host
+    environment:
+      - JAVA_OPTS=-Drocketmq.namesrv.addr=127.0.0.1:9876 -Djava.net.preferIPv4Stack=true
+    depends_on:
+      - namesrv
+  # --- 黑马点评 Java 应用 ---
+  #  hm-dianping:
+  #    build:
+  #      context: .
+  #      dockerfile: Dockerfile
+  #    container_name: hm-dianping
+  #    # 关键：开启 Host 模式，消除 Docker 网桥带来的 NAT 转换开销，提升并发处理能力
+  #    network_mode: host
+  #    restart: always
+  #    volumes:
+  #      # 挂载日志目录到宿主机，方便你实时 tail -f 查看壓测日志
+  #      - ./logs:/app/logs
+  #      # 如果有外部配置文件（如 application.yml），也可以挂载进来
+  #      # - ./config/application-prod.yml:/app/config/application-prod.yml
+  #    environment:
+  #      # 指定 Spring Boot 的环境变量，确保连接的是生产/测试环境配置
+  #      - SPRING_PROFILES_ACTIVE=prod
+  #      # 如果代码里连接 Redis/MQ 用的是 localhost，host 模式下将直接指向宿主机对应的中间件
+  #      # 注意：如果你的 Dockerfile 里的 ENTRYPOINT 没写 ${JAVA_OPTS}，
+  #      # 在这里添加 JMX 参数
+  #      - JAVA_OPTS=-Xmx2g -Xms2g
+  #        -Dcom.sun.management.jmxremote
+  #        -Dcom.sun.management.jmxremote.port=1099
+  #        -Dcom.sun.management.jmxremote.rmi.port=1099
+  #        -Dcom.sun.management.jmxremote.authenticate=false
+  #        -Dcom.sun.management.jmxremote.ssl=false
+  #        -Djava.rmi.server.hostname=127.0.0.1
+  #    # 可以在这里强制覆盖启动命令：
+  #    entrypoint: ["sh", "-c", "java $${JAVA_OPTS} -jar app.jar"]
+  #    logging:
+  #      driver: "json-file"
+  #      options:
+  #        max-size: "200m"
+  #        max-file: "3"
+
+  # --- MySQL 服务 ---
+  #  mysql:
+  #    image: mysql:8.0.26
+  #    container_name: mysql
+  #    restart: always
+  #    ports:
+  #      - "3307:3306"
+  #    environment:
+  #      # 设置 root 密码，请根据需要修改
+  #      - MYSQL_ROOT_PASSWORD=root
+  #      # 设置时区
+  #      - TZ=Asia/Shanghai
+  #    volumes:
+  #      # 数据持久化挂载
+  #      - ./data/mysql/data:/var/lib/mysql
+  #      # 配置文件挂载 (如果宿主机没有此文件，启动前请确保创建或注释掉)
+  #      - ./data/mysql/conf:/etc/mysql/conf.d
+  #      # 自动执行初始化SQL脚本挂载
+  #      - ./data/mysql/init:/docker-entrypoint-initdb.d
+  #    command:
+  #      --character-set-server=utf8mb4
+  #      --collation-server=utf8mb4_unicode_ci
+
+  # --- Nacos 服务 (Host 模式 + MySQL 持久化) ---
+  nacos:
+    image: nacos/nacos-server:v2.3.2
+    container_name: nacos
+    network_mode: host
+    environment:
+      - MODE=standalone
+      # 1. 删掉了所有带有 db.xxx 的 MySQL 配置，直接不指定 SPRING_DATASOURCE_PLATFORM，默认就是内建 Derby
+
+      - JVM_XMS=512m
+      - JVM_XMX=512m
+
+      # 2. 开启鉴权核心配置（在原生数据库下依然需要强密钥保证高版本正常登录）
+      - NACOS_AUTH_ENABLE=true
+      - NACOS_AUTH_TOKEN=SecretKey012345678901234567890123456789abCdeFgHiJkLmNoPqRsTuVwXyZ=
+      - NACOS_AUTH_IDENTITY_KEY=serverIdentity
+      - NACOS_AUTH_IDENTITY_VALUE=security
